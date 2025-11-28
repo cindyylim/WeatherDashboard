@@ -21,6 +21,75 @@ interface ForecastDay {
   icon: string;
 }
 
+interface GeocodingResult {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  elevation: number;
+  feature_code: string;
+  country_code: string;
+  admin1_id?: number;
+  admin2_id?: number;
+  timezone: string;
+  population?: number;
+  country_id: number;
+  country: string;
+  admin1?: string;
+  admin2?: string;
+}
+
+interface GeocodingResponse {
+  results: GeocodingResult[];
+  generationtime_ms: number;
+}
+
+interface WeatherCurrent {
+  time: string;
+  interval: number;
+  temperature_2m: number;
+  relative_humidity_2m: number;
+  apparent_temperature: number;
+  weather_code: number;
+  wind_speed_10m: number;
+  surface_pressure: number;
+}
+
+interface WeatherDaily {
+  time: string[];
+  weather_code: number[];
+  temperature_2m_max: number[];
+  temperature_2m_min: number[];
+}
+
+interface WeatherResponse {
+  latitude: number;
+  longitude: number;
+  generationtime_ms: number;
+  utc_offset_seconds: number;
+  timezone: string;
+  timezone_abbreviation: string;
+  elevation: number;
+  current_units: {
+    time: string;
+    interval: string;
+    temperature_2m: string;
+    relative_humidity_2m: string;
+    apparent_temperature: string;
+    weather_code: string;
+    wind_speed_10m: string;
+    surface_pressure: string;
+  };
+  current: WeatherCurrent;
+  daily_units: {
+    time: string;
+    weather_code: string;
+    temperature_2m_max: string;
+    temperature_2m_min: string;
+  };
+  daily: WeatherDaily;
+}
+
 const WeatherDashboard: React.FC = () => {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
@@ -43,13 +112,13 @@ const WeatherDashboard: React.FC = () => {
         throw new Error('City not found');
       }
       
-      const geoData = await geoResponse.json();
+      const geoData: GeocodingResponse = await geoResponse.json();
       
       if (!geoData.results || geoData.results.length === 0) {
         throw new Error('City not found');
       }
       
-      const location = geoData.results[0];
+      const location: GeocodingResult = geoData.results[0];
       const { latitude, longitude, name, country } = location;
       
       // Fetch current weather and forecast
@@ -61,8 +130,8 @@ const WeatherDashboard: React.FC = () => {
         throw new Error('Weather data not available');
       }
       
-      const weatherData = await weatherResponse.json();
-      const current = weatherData.current;
+      const weatherData: WeatherResponse = await weatherResponse.json();
+      const current: WeatherCurrent = weatherData.current;
       
       // Map WMO weather codes to our icon system
       const mapWeatherCode = (code: number): string => {
@@ -113,7 +182,7 @@ const WeatherDashboard: React.FC = () => {
         icon: mapWeatherCode(weatherData.daily.weather_code[index])
       }));
       setForecast(forecastData);
-    } catch (err) {
+    } catch (err: unknown) {
       setError('Unable to fetch weather data. Please try another city.');
       setWeather(null);
       setForecast([]);
@@ -213,7 +282,7 @@ const WeatherDashboard: React.FC = () => {
               <input
                 type="text"
                 value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Search for a city..."
                 className="w-full px-4 py-3 pr-12 rounded-full text-gray-800 focus:outline-none focus:ring-2 focus:ring-white shadow-lg"
